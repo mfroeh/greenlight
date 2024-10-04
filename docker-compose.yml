@@ -1,0 +1,49 @@
+version: '3.8'
+
+# export DSN in `.env` file
+
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: ["api", "-db-dsn=${DSN}", "-port=4000", "-env=production"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - api
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: greenlight
+      POSTGRES_PASSWORD: pa55word
+      POSTGRES_DB: greenlight
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U greenlight"]
+      interval: 1s
+      timeout: 1s
+      retries: 5
+
+  migrate:
+    image: migrate/migrate:latest
+    volumes:
+      - ./migrations:/migrations
+    command: ["-path", "/migrations", "-database=${DSN}", "up"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:

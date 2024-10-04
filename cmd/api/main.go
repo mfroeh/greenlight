@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -20,6 +19,7 @@ import (
 	"github.com/mfroeh/greenlight/internal/vcs"
 )
 
+// This is only available when building, not when running
 var version = vcs.Version()
 
 type config struct {
@@ -63,21 +63,6 @@ var (
 	PGHOST string
 	PGPORT int16
 )
-
-func init() {
-	PGHOST = os.Getenv("PGHOST")
-	if PGHOST == "" {
-		fmt.Println("PGHOST environment variable not set")
-		os.Exit(1)
-	}
-
-	port, err := strconv.ParseInt(os.Getenv("PGPORT"), 10, 16)
-	if err != nil {
-		fmt.Println("PGPORT environment variable not set")
-		os.Exit(1)
-	}
-	PGPORT = int16(port)
-}
 
 func main() {
 	// Declare an instance of the config struct.

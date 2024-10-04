@@ -1,0 +1,8 @@
+{
+    email "mfroeh0@pm.me"
+}
+
+http://localhost {
+    respond /debug/* "Not permitted" 403
+    reverse_proxy api:4000
+}

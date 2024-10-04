@@ -14,7 +14,7 @@ run/api:
 .PHONY: build/api
 build/api:
 	@go build -ldflags="-s" -o ./bin/api ./cmd/api
-	GODS=linux GOARCH=amd64 go build -ldflags="-s" -o ./bin/linux_amd64/api ./cmd/api
+	GOOS=linux GOARCH=amd64 go build -ldflags "-s" -o ./bin/linux_amd64/api ./cmd/api
 
 .PHONY: db/psql
 db/psql:
@@ -50,3 +50,13 @@ vendor:
 	go mod verify
 	@echo 'Vendoring dependencies...'
 	go mod vendor
+
+# Production
+.PHONY: production/connect
+production/connect:
+	ssh greenlight@${PRODUCTION_HOST_IP}
+
+.PHONY: production/deploy/api
+production/deploy/api:
+	rsync -rP --delete ./cmd ./migrations ./internal .env Caddyfile docker-compose.yml Dockerfile go.mod go.sum  greenlight@${PRODUCTION_HOST_IP}:~/greenlight
+	ssh -t greenlight@${PRODUCTION_HOST_IP} 'cd ~/greenlight && sudo docker compose down && sudo docker compose up'

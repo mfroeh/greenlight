@@ -1,22 +1,32 @@
 { pkgs, lib, config, inputs, ... }:
 
 {
+  # Enable reading of .env for secrets
   dotenv.enable = true;
 
-  # https://devenv.sh/basics/
-  env.GREET = "devenv";
-
   # https://devenv.sh/packages/
-  packages = [ pkgs.git pkgs.go-migrate pkgs.hey ];
+  packages = [
+    pkgs.git
+    pkgs.go-migrate
+    pkgs.hey
+  ];
 
   # https://devenv.sh/languages/
   languages.go.enable = true;
 
-  # https://devenv.sh/processes/
-  # processes.cargo-watch.exec = "cargo-watch";
-
-  # https://devenv.sh/services/
+  # postgres
   services.postgres.enable = true;
+  services.postgres.initialScript = ''
+    CREATE DATABASE greenlight;
+    CREATE role greenlight WITH LOGIN PASSWORD 'pa55word';
+    GRANT ALL ON DATABASE greenlight TO greenlight;
+    ALTER DATABASE greenlight OWNER to greenlight;
+  '';
+
+  services.postgres.listen_addresses = "localhost";
+  services.postgres.port = 5432;
+
+  env.GREENLIGHT_DB_DSN = "postgres://greenlight:pa55word@localhost:5432/greenlight?sslmode=disable";
 
   # https://devenv.sh/scripts/
   scripts.hello.exec = ''
